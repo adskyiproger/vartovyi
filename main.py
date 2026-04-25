@@ -58,11 +58,7 @@ def send_to_channels(channels: dict, channel_names: list[str], message: str) -> 
 
 def main():
     log_level = config.get("log_level", "info").upper()
-    print(f"Log level set to {log_level}")
-    logging.basicConfig(
-        level=getattr(logging, log_level, logging.INFO),
-        format="%(asctime)s [%(levelname)s] %(message)s",
-    )
+    log.info(f"Log level set to {log_level}")
 
     log.info("Starting monitor...")
 
