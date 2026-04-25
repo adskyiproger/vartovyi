@@ -1,0 +1,12 @@
+[Unit]
+Description=network monitor
+After=network.target
+
+[Service]
+ExecStart=/opt/bot/bot.py
+User=nobody
+Restart=always
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

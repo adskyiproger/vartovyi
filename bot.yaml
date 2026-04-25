@@ -1,0 +1,121 @@
+# =========================================
+# 📡 Monitoring Bot Configuration
+# =========================================
+
+# Logging level
+# Available: debug, info, warning, error
+log_level: info
+
+# Default notification channel
+# Used if a service does not specify its own channels
+default_channel: telegram-default
+
+# Default interval (in seconds) for checks
+# Can be overridden per service
+check_interval: 10
+
+
+# =========================================
+# 📢 Notification Channels
+# =========================================
+
+channels:
+  telegram-default:
+    type: telegram
+    config:
+      # Telegram bot token (use environment variable)
+      bot_token: ${TELEGRAM_BOT_TOKEN}
+
+      # List of chat IDs to send notifications to
+      chat_ids:
+        - ${TELEGRAM_CHAT_ID}
+
+
+  # Example of another channel (same type, different audience)
+  telegram-alerts:
+    type: telegram
+    config:
+      bot_token: ${TELEGRAM_BOT_TOKEN}
+      chat_ids:
+        - ${TELEGRAM_CHAT_ID}
+        # - ${ANOTHER_CHAT_ID}
+
+
+# =========================================
+# 🖥️ Monitored Services
+# =========================================
+
+services:
+
+  # -----------------------------------------
+  # 🌐 HTTP Service Example
+  # -----------------------------------------
+  - name: website
+    check:
+      type: http
+
+      # URL to check
+      url: https://example.com
+
+      # Expected HTTP status code (default: 200)
+      expected_status: 200
+
+    # Optional: custom check interval (seconds)
+    interval: 30
+
+    # Optional: override channels
+    channels:
+      - telegram-default
+
+    # Optional: custom messages
+    down_message: "❌ Website is DOWN"
+    up_message: "✅ Website is back online"
+
+
+  # -----------------------------------------
+  # 🔌 TCP Service Example
+  # -----------------------------------------
+  - name: ssh-server
+    check:
+      type: tcp
+
+      # Hostname or IP
+      host: example.com
+
+      # Port to check
+      port: 22
+
+    interval: 15
+
+
+  # -----------------------------------------
+  # 📡 ICMP (Ping) Example
+  # -----------------------------------------
+  - name: router
+    check:
+      type: icmp
+
+      # Hostname or IP
+      host: 8.8.8.8
+
+    # Uses default interval and default channel
+
+
+  # -----------------------------------------
+  # 🔥 Critical Service Example
+  # -----------------------------------------
+  - name: critical-api
+    check:
+      type: http
+      url: https://api.example.com/health
+      expected_status: 200
+
+    interval: 5
+
+    # Send alerts to multiple channels
+    channels:
+      - telegram-default
+      - telegram-alerts
+
+    down_message: "🚨 CRITICAL: API is DOWN"
+    up_message: "✅ API recovered"
