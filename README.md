@@ -303,48 +303,33 @@ export TELEGRAM_CHAT_ID_1=123456
 
 # 🐳 Run with Docker Compose
 
-### 📄 `docker-compose.yaml`
+## 📄 `docker-compose.yaml`
 
-```yaml id="z9x1k3"
-version: "3.9"
 
+```yaml
 services:
   vartovyi:
-    build: .
-    container_name: vartovyi
-
-    # Restart policy
+    image: ghcr.io/adskyiproger/vartovyi:latest
     restart: unless-stopped
-
-    # Mount config file
     volumes:
-      - ./config.yaml:/app/config.yaml:ro
-
-    # Environment variables (used in config.yaml)
+      - ./bot.yaml:/app/bot.yaml:ro
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
 
-    # Required for ICMP (ping)
-    cap_add:
-      - NET_RAW
-
-    # Optional: limit resources
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
 ```
+
+## config.yaml
+
+Create `bot.yaml` in the same directory as `docker-compose.yaml`, see example at [bot.yaml](bot.yaml)
 
 ---
 
 ## 🔐 Environment Variables
 
-Створи файл `.env` поруч з `docker-compose.yaml`:
+Create file `.env` in the same folder as `docker-compose.yaml`:
 
-```bash id="n1f8ab"
+```bash
 TELEGRAM_BOT_TOKEN=your_bot_token
 TELEGRAM_CHAT_ID=your_chat_id
 ```
@@ -353,7 +338,7 @@ TELEGRAM_CHAT_ID=your_chat_id
 
 ## ▶️ Run
 
-```bash id="3p0qwe"
+```bash
 docker compose up -d
 ```
 
@@ -361,7 +346,7 @@ docker compose up -d
 
 ## 📜 Logs
 
-```bash id="7lmno2"
+```bash
 docker compose logs -f
 ```
 
@@ -369,24 +354,9 @@ docker compose logs -f
 
 ## 🛑 Stop
 
-```bash id="2k9dls"
+```bash
 docker compose down
 ```
-
-```yaml
-services:
-  vartovyi:
-    image: ghcr.io/your-org/vartovyi:latest
-    restart: unless-stopped
-    volumes:
-      - ./config.yaml:/app/config.yaml:ro
-    environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
-    cap_add:
-      - NET_RAW
-```
-
 
 # 🧩 Extending
 
