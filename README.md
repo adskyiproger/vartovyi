@@ -58,11 +58,11 @@ check_interval: 6
 
 ---
 
-## 📢 Channels
+# 📢 Channels
 
 Channels define where alerts are sent.
 
-### Example:
+**Example**
 
 ```yaml
 channels:
@@ -82,33 +82,123 @@ channels:
         - ${TELEGRAM_CHAT_ID_2}
 ```
 
-### 🔍 Notes
+---
 
-* Supports **environment variables** via `${VAR_NAME}`
-* Multiple `chat_ids` supported
-* You can define multiple channels and reuse them across services
+## 📲 Telegram Channel
+
+The `telegram` channel allows sending alerts to one or multiple Telegram chats using a bot.
 
 ---
 
-## 🖥️ Services
+### ⚙️ Configuration Options
+
+| Parameter   | Required | Type             | Description                                  |
+| ----------- | -------- | ---------------- | -------------------------------------------- |
+| `bot_token` | ✅        | string           | Telegram Bot API token                       |
+| `chat_ids`  | ✅        | list[string/int] | List of chat IDs where messages will be sent |
+
+---
+
+### 💡 Notes
+
+* `chat_ids` supports:
+
+  * personal chats
+  * group chats
+  * channels (if bot has access)
+* You can send alerts to multiple destinations at once
+* Environment variables are supported (`${VAR_NAME}`)
+
+---
+
+### 🤖 How to Create a Telegram Bot Token
+
+1. Open Telegram and search for BotFather
+
+2. Start a chat and run:
+
+   ```
+   /start
+   ```
+
+3. Create a new bot:
+
+   ```
+   /newbot
+   ```
+
+4. Follow the instructions:
+
+   * Set bot name
+   * Set bot username
+
+5. You will receive a token like:
+
+   ```
+   123456789:AAxxxxxxxxxxxxxxxxxxxx
+   ```
+
+👉 Official documentation:
+[https://core.telegram.org/bots#how-do-i-create-a-bot](https://core.telegram.org/bots#how-do-i-create-a-bot)
+
+---
+
+### 💬 How to Get Your Chat ID
+
+1. Open Telegram and search for:
+
+   ```
+   @userinfobot
+   ```
+2. Start the bot
+3. It will return your **chat ID**
+
+
+### ⚠️ Notes for Groups
+
+* Add your bot to the group
+* Send a message in the group
+* Use `getUpdates` to retrieve the group `chat_id`
+* Group IDs are usually negative numbers (e.g. `-1001234567890`)
+
+---
+
+### ✅ Example with Environment Variables
+
+```yaml
+channels:
+  telegram:
+    type: telegram
+    config:
+      bot_token: ${TELEGRAM_BOT_TOKEN}
+      chat_ids:
+        - ${TELEGRAM_CHAT_ID}
+```
+
+```bash
+export TELEGRAM_BOT_TOKEN=123456:ABC...
+export TELEGRAM_CHAT_ID=123456789
+```
+
+---
+
+# 🖥️ Services
 
 Each service defines what should be monitored.
 
-### Example:
+**Example:**
 
 ```yaml
 services:
-  - name: street
+  - name: router
     check:
-      type: http
-      url: http://192.168.88.227
-      expected_status: 200
-
+      type: icmp
+      host: 8.8.8.8
   - name: nas
     interval: 30
     check:
       type: tcp
-      host: 192.168.88.225
+      host: 1.1.1.1
       port: 22
 
   - name: light
@@ -170,14 +260,15 @@ check:
 
 ---
 
-## 🔔 Notifications
+# 🔔 Notifications configuration
 
-### Default behavior
+## Default behavior
 
-* On failure → alert is sent
-* On recovery → optional `up_message` is sent
+* On failure → alert is sent, `down_message`
+* On recovery → `up_message` is sent
+* If not configured then default is sent
 
-### Example alerts
+## Example alerts
 
 ```
 ❌ Service DOWN: nas (tcp 192.168.88.225:22)
@@ -190,7 +281,7 @@ Power is up!
 
 ---
 
-## ▶️ Run
+# ▶️ Run locally
 
 ```bash
 pip install -r requirements.txt
@@ -210,25 +301,112 @@ export TELEGRAM_CHAT_ID_1=123456
 
 ---
 
-## 🧩 Extending
+# 🐳 Run with Docker Compose
 
-### Add new check
+### 📄 `docker-compose.yaml`
+
+```yaml id="z9x1k3"
+version: "3.9"
+
+services:
+  vartovyi:
+    build: .
+    container_name: vartovyi
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Mount config file
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+
+    # Environment variables (used in config.yaml)
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+
+    # Required for ICMP (ping)
+    cap_add:
+      - NET_RAW
+
+    # Optional: limit resources
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+```
+
+---
+
+## 🔐 Environment Variables
+
+Створи файл `.env` поруч з `docker-compose.yaml`:
+
+```bash id="n1f8ab"
+TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
+```
+
+---
+
+## ▶️ Run
+
+```bash id="3p0qwe"
+docker compose up -d
+```
+
+---
+
+## 📜 Logs
+
+```bash id="7lmno2"
+docker compose logs -f
+```
+
+---
+
+## 🛑 Stop
+
+```bash id="2k9dls"
+docker compose down
+```
+
+```yaml
+services:
+  vartovyi:
+    image: ghcr.io/your-org/vartovyi:latest
+    restart: unless-stopped
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+    cap_add:
+      - NET_RAW
+```
+
+
+# 🧩 Extending
+
+## Add new check
 
 1. Create file in `checks/`
 2. Implement base interface
-3. Register in `CHECK_REGISTRY`
+3. Add configuration to bot.yaml
 
 ---
 
-### Add new channel
+## Add new channel
 
 1. Create file in `channels/`
 2. Implement `send()`
-3. Register in `CHANNEL_REGISTRY`
+3. Add configuration to bot.yaml
 
 ---
 
-## 📌 Roadmap
+# 📌 Roadmap
 
 * [ ] Retry logic
 * [ ] Alert deduplication
@@ -239,6 +417,6 @@ export TELEGRAM_CHAT_ID_1=123456
 
 ---
 
-## 📄 License
+# 📄 License
 
 MIT
